@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 29 19:12:42 2019
+Created on Wed Jan 30 16:28:38 2019
 
 @author: Aidin
 """
@@ -23,14 +23,17 @@ if __name__ == '__main__':
     print ("Rewards:")
     printValues(grid.rewards,grid)
     
-    Q = {}
+    Q1 = {}
+    Q2 = {}
     
     states = grid.allStates()
     
     for s in states:
-        Q[s] = {}
+        Q1[s] = {}
+        Q2[s] = {}
         for a in ACTIONS:
-            Q[s][a] = 0
+            Q1[s][a] = 0
+            Q2[s][a] = 0
     
     
     updateCountsSarsa = {}
@@ -54,31 +57,39 @@ if __name__ == '__main__':
         s = (2,0)
         grid.setState(s)
         
-        a = randomAction(argMax(Q[s])[0],grid,eps = 0.5/t)
         biggestChange = 0
         
         while not grid.gameOver():
+            p =  np.random.random()
+            if p > 0.5:
+                aChosen = argMax(Q1[s])[0]
+            else:
+                aChosen = argMax(Q2[s])[0]    
+            a = randomAction(aChosen,grid,eps = 0.5/t)
             r = grid.move(a)
             s2 = grid.currentState()
-            
-            a2 = randomAction(argMax(Q[s2])[0],grid,eps = 0.5/t)            
-            
             alpha = ALPHA/updateCountsSarsa[s][a]
             updateCountsSarsa[s][a] += 0.005
-            oldQ = Q[s][a]
-            Q[s][a] = Q[s][a] + alpha * (r + GAMMA * Q[s2][a2] - Q[s][a])
-            biggestChange = max(biggestChange, np.abs(oldQ - Q[s][a]))
+            if p < 0.5:
+                a2,maxQValue = argMax(Q1[s2])
+                oldQ = Q2[s][a]
+                Q2[s][a] = Q2[s][a] + alpha * (r + GAMMA * maxQValue - Q2[s][a])
+                biggestChange = max(biggestChange, np.abs(oldQ - Q2[s][a]))
+            else:
+                a2,maxQValue = argMax(Q2[s2])
+                oldQ = Q1[s][a]
+                Q1[s][a] = Q1[s][a] + alpha * (r + GAMMA * maxQValue - Q1[s][a])
+                biggestChange = max(biggestChange, np.abs(oldQ - Q1[s][a]))
             
             a = a2
             s = s2
         deltas.append(biggestChange)
-    plt.figure(figsize=(10,3.5))
     plt.plot(deltas)
     
     policy = {}
     V = {}
     for s in grid.actions.keys():
-        policy[s],V[s] = argMax(Q[s])
+        policy[s],V[s] = argMax(Q1[s])
         
     
     
@@ -87,4 +98,3 @@ if __name__ == '__main__':
     
     print("Policy:")
     printPolicy(policy,grid)
-        

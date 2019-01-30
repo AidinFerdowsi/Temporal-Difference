@@ -54,7 +54,6 @@ if __name__ == '__main__':
         s = (2,0)
         grid.setState(s)
         
-        a = argMax(Q[s])[0]
         biggestChange = 0
         
         while not grid.gameOver():
