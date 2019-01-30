@@ -73,6 +73,7 @@ if __name__ == '__main__':
             a = a2
             s = s2
         deltas.append(biggestChange)
+    plt.figure(figsize=(10,3.5))    
     plt.plot(deltas)
     
     policy = {}
